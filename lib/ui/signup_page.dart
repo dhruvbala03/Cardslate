@@ -20,7 +20,14 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  bool _buttonEnabled = true;
+
   void signup() async {
+    // disable button
+    setState(() {
+      _buttonEnabled = false;
+    });
+
     // register user
     String res = await AuthTings().registerUser(
       firstName: _firstNameController.text,
@@ -38,9 +45,14 @@ class _SignUpPageState extends State<SignUpPage> {
       // navigate to homepage if successful login
       if (res == "success") {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => HomePage(user: AuthTings.currentUser)),
-          (route) => false);
+            MaterialPageRoute(
+                builder: (context) => HomePage(user: AuthTings.currentUser)),
+            (route) => false);
       }
+      // enable button
+      setState(() {
+        _buttonEnabled = true;
+      });
     }
 
     showSnackBar(context, res);
@@ -78,6 +90,7 @@ class _SignUpPageState extends State<SignUpPage> {
             MyButton(
               text: "Sign Up",
               onPress: signup,
+              isEnabled: _buttonEnabled,
             ),
           ],
         ),

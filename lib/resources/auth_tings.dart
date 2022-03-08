@@ -49,14 +49,14 @@ class AuthTings {
         lastName: lastName,
         username: username,
         email: email,
-        sets: [] as List<String>,
+        sets: [],
       );
 
       // add user to our database
       await _firestore
           .collection("users")
           .doc(cred.user!.uid)
-          .set(_user.toJson());
+          .set(_user.toMap());
 
       res = "success";
     } catch (err) {

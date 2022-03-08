@@ -18,9 +18,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
+  bool _buttonEnabled = true;
 
   void createSet() async {
+    // disable button
+    setState(() {
+      _buttonEnabled = false;
+    });
     Set s = await DatabaseTings().createAndUploadSet(
       title: "",
       description: "",
@@ -28,12 +32,16 @@ class _HomePageState extends State<HomePage> {
       username: widget.user.username,
     );
     if (s.setid != "") {
-      Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => SetPage(set: s)));
+      Navigator.of(context)
+          .push(MaterialPageRoute(builder: (context) => SetPage(set: s)));
       showSnackBar(context, "success");
     } else {
       showSnackBar(context, "Some error occured. Please try again.");
     }
+    // enable button
+    setState(() {
+      _buttonEnabled = true;
+    });
   }
 
   @override
@@ -43,7 +51,11 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           children: [
             Text("Welcome, " + widget.user.firstName + "!"),
-            MyButton(text: "Create Set", onPress: createSet),
+            MyButton(
+              text: "Create Set",
+              onPress: createSet,
+              isEnabled: _buttonEnabled,
+            ),
           ],
         ),
       ),

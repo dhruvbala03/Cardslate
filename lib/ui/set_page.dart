@@ -18,14 +18,23 @@ class SetPage extends StatefulWidget {
 class _SetPageState extends State<SetPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  bool _buttonEnabled = true;
 
   void saveSet() async {
+    // disable button
+    setState(() {
+      _buttonEnabled = false;
+    });
     String res = await DatabaseTings().updateSet(
       setid: widget.set.setid,
       title: _titleController.text,
       description: _descriptionController.text,
     );
     showSnackBar(context, res);
+    // enable button
+    setState(() {
+      _buttonEnabled = true;
+    });
   }
 
   @override
@@ -45,6 +54,7 @@ class _SetPageState extends State<SetPage> {
             MyButton(
               onPress: saveSet,
               text: "Save Set",
+              isEnabled: _buttonEnabled,
             )
           ],
         ),

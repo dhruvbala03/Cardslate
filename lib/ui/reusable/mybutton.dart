@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+// TODO: implement loading animation. Refer to instagram clone for reference
+
 class MyButton extends StatelessWidget {
   // void callback function telling button what to do when pressed
   final VoidCallback onPress;
@@ -8,6 +10,7 @@ class MyButton extends StatelessWidget {
   final Color textColor;
   final double height;
   final double width;
+  final bool isEnabled;
 
   const MyButton({
     Key? key,
@@ -17,6 +20,7 @@ class MyButton extends StatelessWidget {
     this.textColor = Colors.white,
     this.height = 50,
     this.width = 150,
+    this.isEnabled = true,
   }) : super(key: key);
 
   @override
@@ -26,7 +30,7 @@ class MyButton extends StatelessWidget {
       child: Container(
         height: height,
         width: width,
-        color: backgroundColor,
+        color: isEnabled ? backgroundColor : Colors.blueGrey,
         child: Center(
           child: Text(
             text,
