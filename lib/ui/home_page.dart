@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:translatr_backend/models/appuser.dart';
 import 'package:translatr_backend/models/set.dart';
@@ -6,6 +5,7 @@ import 'package:translatr_backend/resources/database_tings.dart';
 import 'package:translatr_backend/ui/reusable/mybutton.dart';
 import 'package:translatr_backend/ui/set_page.dart';
 
+import '../resources/auth_tings.dart';
 import '../utils/utils.dart';
 
 class HomePage extends StatefulWidget {
@@ -29,35 +29,15 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void logOut() async {
+    await AuthTings().signOut();
+    Navigator.pop(context);
+  }
+
   @override
   void initState() {
     super.initState();
     init();
-  }
-
-  // TODO: newly created sets don't show up when navigating back from set page
-  void createSet() async {
-    // disable button
-    setState(() {
-      _buttonEnabled = false;
-    });
-    Set s = await DatabaseTings().createAndUploadSet(
-      title: "",
-      description: "",
-      userid: widget.user.userid,
-      username: widget.user.username,
-    );
-    if (s.setid != "") {
-      navigateToSetView(
-          s); // TODO: Pass in set.none at first. Create new set in set_page only if title field is non-null
-      showSnackBar(context, "success");
-    } else {
-      showSnackBar(context, "Some error occured. Please try again.");
-    }
-    // enable button
-    setState(() {
-      _buttonEnabled = true;
-    });
   }
 
   void navigateToSetView(Set s) async {
@@ -66,17 +46,24 @@ class _HomePageState extends State<HomePage> {
     init();
   }
 
+  void deleteSet(int index) async {
+    String res = "Some error occured";
+    res = await DatabaseTings().deleteSet(set: _usersets[index]);
+    init();
+    showSnackBar(context, res); // TODO: snack bar not showing
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
       child: Center(
         child: Column(
           children: [
-            MyButton(text: "Back", onPress: () => Navigator.pop(context)),
+            MyButton(text: "Log Out", onPress: logOut),
             Text("Welcome, " + widget.user.firstName + "!"),
             MyButton(
               text: "Create Set",
-              onPress: createSet,
+              onPress: () => navigateToSetView(Set.none()),
               isEnabled: _buttonEnabled,
             ),
             Expanded(
@@ -88,9 +75,11 @@ class _HomePageState extends State<HomePage> {
                   : ListView.builder(
                       itemCount: _usersets.length,
                       itemBuilder: (context, index) {
-                        return GestureDetector(
-                          onTap: () => navigateToSetView(_usersets[index]),
-                          child: Text(_usersets[index].title),
+                        return SetListItem(
+                          deleteFunction: () => deleteSet(index),
+                          navigateFunction: () =>
+                              navigateToSetView(_usersets[index]),
+                          setTitle: _usersets[index].title,
                         );
                       },
                     ),
@@ -98,6 +87,35 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class SetListItem extends StatelessWidget {
+  final deleteFunction;
+  final navigateFunction;
+  final String setTitle;
+
+  const SetListItem({
+    Key? key,
+    required this.deleteFunction,
+    required this.navigateFunction,
+    required this.setTitle,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        MyButton(
+          text: "X",
+          onPress: deleteFunction,
+        ),
+        GestureDetector(
+          onTap: navigateFunction,
+          child: Text(setTitle),
+        ),
+      ],
     );
   }
 }

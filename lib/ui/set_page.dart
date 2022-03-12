@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:translatr_backend/models/set.dart';
+import 'package:translatr_backend/resources/auth_tings.dart';
 import 'package:translatr_backend/resources/database_tings.dart';
 import 'package:translatr_backend/ui/reusable/mybutton.dart';
 import 'package:translatr_backend/ui/reusable/mytextfield.dart';
@@ -31,21 +32,46 @@ class _SetPageState extends State<SetPage> {
     _descriptionController.text = widget.set.description;
   }
 
+  void goBack() {
+    Navigator.pop(context);
+  }
+
   void saveSet() async {
+    if (_titleController.text == "") {
+      showSnackBar(context, "Set Title cannot be empty");
+      return;
+    }
+
     // disable button
     setState(() {
       _buttonEnabled = false;
     });
-    String res = await DatabaseTings().updateSet(
-      setid: widget.set.setid,
-      title: _titleController.text,
-      description: _descriptionController.text,
-    );
-    showSnackBar(context, res);
+
+    // create new set if setid is empty
+    if (widget.set.setid.isEmpty) {
+      await DatabaseTings().createAndUploadSet(
+        title: _titleController.text,
+        description: _descriptionController.text,
+        userid: AuthTings.currentUser.userid,
+        username: AuthTings.currentUser.username,
+      );
+    }
+    // update fields otherwise
+    else {
+      String res = await DatabaseTings().updateSet(
+        setid: widget.set.setid,
+        title: _titleController.text,
+        description: _descriptionController.text,
+      );
+      showSnackBar(context, res);
+    }
+
     // enable button
     setState(() {
       _buttonEnabled = true;
     });
+
+    goBack();
   }
 
   void addTerm() async {
@@ -67,10 +93,10 @@ class _SetPageState extends State<SetPage> {
       child: Center(
         child: Column(
           children: [
-            MyButton(text: "Back", onPress: () => Navigator.pop(context)),
+            MyButton(text: "Back", onPress: goBack),
             MyTextField(
               textController: _titleController,
-              labelText: "Set Name",
+              labelText: "Set Title",
             ),
             MyTextField(
               textController: _descriptionController,

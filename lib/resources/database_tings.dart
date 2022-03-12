@@ -3,6 +3,7 @@ import 'package:translatr_backend/resources/auth_tings.dart';
 import 'package:uuid/uuid.dart';
 import 'package:translatr_backend/models/set.dart' as model;
 
+// TODO: what is static and what is not
 class DatabaseTings {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -48,6 +49,9 @@ class DatabaseTings {
         terms: {},
       );
 
+      // add set to local user
+      AuthTings.currentUser.sets.add(setid);
+
       // add set to database
       _firestore.collection('sets').doc(setid).set(s.toJson());
 
@@ -80,10 +84,16 @@ class DatabaseTings {
     return res;
   }
 
-  Future<String> deleteSet({required String setid}) async {
+  Future<String> deleteSet({required model.Set set}) async {
     String res = "Some error occurred";
     try {
-      await _firestore.collection('posts').doc(setid).delete();
+      // remove set from local user
+      AuthTings.currentUser.sets.remove(set.setid);
+      // remove set from database
+      await _firestore.collection('sets').doc(set.setid).delete();
+      await _firestore.collection('users').doc(set.ownerid).update({
+        'sets': AuthTings.currentUser.sets,
+      });
       res = 'success';
     } catch (err) {
       res = err.toString();
@@ -128,20 +138,4 @@ class DatabaseTings {
     }
     return res;
   }
-
-  // TODO: rewrite considering change in data layout
-  // Future<String> addTermsToSet({
-  //   required List<Map<String, String>> terms,
-  //   required String setid,
-  // }) async {
-  //   String res = "Some error occurred";
-  //   try {
-  //     await _firestore.collection('sets').doc(setid).update({
-  //       'terms': FieldValue.arrayUnion(terms),
-  //     });
-  //   } catch (err) {
-  //     return err.toString();
-  //   }
-  //   return res;
-  // }
 }
