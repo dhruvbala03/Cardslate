@@ -1,8 +1,7 @@
-import 'package:firebase/firebase.dart';
+
 import 'package:flutter/material.dart';
 import 'package:translatr_backend/models/appuser.dart';
 import 'package:translatr_backend/models/set.dart';
-import 'package:translatr_backend/resources/auth_tings.dart';
 import 'package:translatr_backend/resources/database_tings.dart';
 import 'package:translatr_backend/ui/reusable/mybutton.dart';
 import 'package:translatr_backend/ui/set_page.dart';
