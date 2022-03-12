@@ -13,13 +13,18 @@ class DatabaseTings {
   }
 
   Future<List<model.Set>> downloadUserSets({required String userid}) async {
-    List<String> setids = AuthTings.currentUser.sets as List<String>;
+    List setids = AuthTings.currentUser.sets;
     List<model.Set> sets = [];
     for (String setid in setids) {
       model.Set s = await downloadSet(setid: setid);
       sets.add(s);
     }
     return sets;
+  }
+
+  // TODO: exc
+  Map<String, String> extractTermsFromSet({required model.Set s}) {
+    return (s.terms as Map<String, String>);
   }
 
   Future<model.Set> createAndUploadSet({
@@ -40,7 +45,7 @@ class DatabaseTings {
         ownerName: username,
         description: description,
         datePublished: DateTime.now(),
-        terms: [],
+        terms: {},
       );
 
       // add set to database
@@ -53,9 +58,8 @@ class DatabaseTings {
 
       return s;
     } catch (err) {
-      return model.Set.none();
+      return model.Set.none(); // TODO: improve
     }
-    return model.Set.none(); // TODO: improve
   }
 
   Future<String> updateSet({
@@ -87,36 +91,57 @@ class DatabaseTings {
     return res;
   }
 
+  // TODO: make this work
   Future<String> addTermToSet({
     required String front,
     required String back,
-    required String setid,
+    required model.Set s,
   }) async {
     String res = "Some error occurred";
     try {
-      await _firestore.collection('sets').doc(setid).update({
-        'terms': FieldValue.arrayUnion([
-          {front: back}
-        ]),
-      });
+      await _firestore
+          .collection('sets')
+          .doc(s.setid)
+          .collection('terms')
+          .doc(front)
+          .set({front: back});
     } catch (err) {
       return err.toString();
     }
     return res;
   }
 
-  Future<String> addTermsToSet({
-    required List<Map<String, String>> terms,
-    required String setid,
+  Future<String> removeTermFromSet({
+    required String front,
+    required model.Set s,
   }) async {
     String res = "Some error occurred";
     try {
-      await _firestore.collection('sets').doc(setid).update({
-        'terms': FieldValue.arrayUnion(terms),
-      });
+      await _firestore
+          .collection('sets')
+          .doc(s.setid)
+          .collection('terms')
+          .doc(front)
+          .delete();
     } catch (err) {
       return err.toString();
     }
     return res;
   }
+
+  // TODO: rewrite considering change in data layout
+  // Future<String> addTermsToSet({
+  //   required List<Map<String, String>> terms,
+  //   required String setid,
+  // }) async {
+  //   String res = "Some error occurred";
+  //   try {
+  //     await _firestore.collection('sets').doc(setid).update({
+  //       'terms': FieldValue.arrayUnion(terms),
+  //     });
+  //   } catch (err) {
+  //     return err.toString();
+  //   }
+  //   return res;
+  // }
 }

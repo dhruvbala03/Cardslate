@@ -65,6 +65,7 @@ class _SignUpPageState extends State<SignUpPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            MyButton(text: "Back", onPress: () => Navigator.pop(context)),
             MyTextField(
               labelText: "first name",
               textController: _firstNameController,

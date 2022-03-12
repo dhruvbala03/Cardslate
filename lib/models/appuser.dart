@@ -18,7 +18,7 @@ class AppUser {
   });
 
   static AppUser fromSnap(DocumentSnapshot snap) {
-    var snapshot = snap.data() as Map<String, dynamic>;
+    var snapshot = snap.data() as Map;
 
     return AppUser(
       userid: snapshot["user-id"],

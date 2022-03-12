@@ -7,7 +7,7 @@ class Set {
   final String ownerName;
   final String description;
   final DateTime datePublished;
-  final List terms;
+  final Map terms;
 
   const Set({
     required this.setid,
@@ -28,8 +28,8 @@ class Set {
       ownerid: snapshot["owner-id"],
       ownerName: snapshot["owner-name"],
       description: snapshot["description"],
-      datePublished: snapshot["date-published"],
-      terms: snapshot["this.terms"],
+      datePublished: (snapshot["date-published"] as Timestamp).toDate(),
+      terms: snapshot["terms"],
     );
   }
 
@@ -41,7 +41,7 @@ class Set {
       ownerName: "",
       description: "",
       datePublished: DateTime.now(),
-      terms: [],
+      terms: {},
     );
   }
 

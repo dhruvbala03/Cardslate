@@ -74,7 +74,7 @@ class AuthTings {
       return "Please enter all fields.";
     }
 
-    String res = "Some error occurred";
+    String res = "Some error occurred at authenticateUser method";
     try {
       await _auth.signInWithEmailAndPassword(
         email: email,

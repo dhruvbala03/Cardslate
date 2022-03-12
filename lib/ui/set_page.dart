@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:translatr_backend/models/set.dart';
 import 'package:translatr_backend/resources/database_tings.dart';
@@ -19,6 +21,15 @@ class _SetPageState extends State<SetPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   bool _buttonEnabled = true;
+  final TextEditingController _newTermFrontController = TextEditingController();
+  final TextEditingController _newTermBackController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController.text = widget.set.title;
+    _descriptionController.text = widget.set.description;
+  }
 
   void saveSet() async {
     // disable button
@@ -37,12 +48,26 @@ class _SetPageState extends State<SetPage> {
     });
   }
 
+  void addTerm() async {
+    String res = await DatabaseTings().addTermToSet(
+      front: _newTermFrontController.text,
+      back: _newTermBackController.text,
+      s: widget.set,
+    );
+    setState(() {
+      widget.set.terms[_newTermFrontController.text] =
+          _newTermBackController.text;
+    });
+    showSnackBar(context, res);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
       child: Center(
         child: Column(
           children: [
+            MyButton(text: "Back", onPress: () => Navigator.pop(context)),
             MyTextField(
               textController: _titleController,
               labelText: "Set Name",
@@ -55,7 +80,7 @@ class _SetPageState extends State<SetPage> {
               onPress: saveSet,
               text: "Save Set",
               isEnabled: _buttonEnabled,
-            )
+            ),
           ],
         ),
       ),
