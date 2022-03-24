@@ -10,10 +10,10 @@ class AuthTings {
 
   // TODO: handle possible errors
   Future<model.AppUser> getUserDetails() async {
-    User currentUser = _auth.currentUser!;
+    User user = _auth.currentUser!;
 
     DocumentSnapshot documentSnapshot =
-        await _firestore.collection('users').doc(currentUser.uid).get();
+        await _firestore.collection('users').doc(user.uid).get();
 
     return model.AppUser.fromSnap(documentSnapshot);
   }
@@ -91,5 +91,10 @@ class AuthTings {
 
   Future<void> signOut() async {
     await _auth.signOut();
+    currentUser = model.AppUser.none();
+  }
+
+  Future<void> loadUserInfo() async {
+    currentUser = await getUserDetails();
   }
 }

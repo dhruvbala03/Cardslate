@@ -1,5 +1,7 @@
 import 'dart:html';
 
+import 'package:firebase/firebase.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:translatr_backend/models/appuser.dart';
 import 'package:translatr_backend/ui/home_page.dart';
@@ -21,6 +23,19 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _buttonEnabled = true;
+
+  // log in user if already authenticated
+  @override
+  void initState() {
+    super.initState();
+    if (FirebaseAuth.instance.currentUser != null) {
+      if (AuthTings.currentUser.userid.isEmpty) {
+        AuthTings().loadUserInfo();
+      }
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => HomePage(user: AuthTings.currentUser)));
+    }
+  }
 
   void login() async {
     // disable button
@@ -46,8 +61,14 @@ class _LoginPageState extends State<LoginPage> {
     setState(() {
       _buttonEnabled = false;
     });
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (context) => const SignUpPage()));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => SignUpPage(
+          defaultEmail: _emailController.text,
+          defaultPassword: _passwordController.text,
+        ),
+      ),
+    );
   }
 
   @override

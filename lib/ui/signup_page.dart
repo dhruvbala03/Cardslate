@@ -7,7 +7,12 @@ import 'home_page.dart';
 import 'reusable/mybutton.dart';
 
 class SignUpPage extends StatefulWidget {
-  const SignUpPage({Key? key}) : super(key: key);
+  final String defaultEmail;
+  final String defaultPassword;
+
+  const SignUpPage(
+      {Key? key, required this.defaultEmail, required this.defaultPassword})
+      : super(key: key);
 
   @override
   State<SignUpPage> createState() => _SignUpPageState();
@@ -21,6 +26,13 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _buttonEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.text = widget.defaultEmail;
+    _passwordController.text = widget.defaultPassword;
+  }
 
   void signup() async {
     // disable button

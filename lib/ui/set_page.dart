@@ -18,18 +18,29 @@ class SetPage extends StatefulWidget {
   State<SetPage> createState() => _SetPageState();
 }
 
+// TODO: FIX WEIRD EXCEPTION WHEN CREATING NEW SET
 class _SetPageState extends State<SetPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   bool _buttonEnabled = true;
-  final TextEditingController _newTermFrontController = TextEditingController();
-  final TextEditingController _newTermBackController = TextEditingController();
+
+  List<TextEditingController> _termFrontEditingControllers = [];
+  List<String> terms = [];
+  // TODO: make this a list of term-ids. there will be a collection of terms, each in their own document with the name being their term ID; these documents will have front and back fields
 
   @override
   void initState() {
     super.initState();
     _titleController.text = widget.set.title;
     _descriptionController.text = widget.set.description;
+  }
+
+  void updateTermsList() {
+    List<String> temp = [];
+    for (var controller in _termFrontEditingControllers) {
+      temp.add(controller.text);
+    } // TODO: inefficient? and what about when we translate stuff?
+    terms = temp;
   }
 
   void goBack() {
@@ -47,13 +58,18 @@ class _SetPageState extends State<SetPage> {
       _buttonEnabled = false;
     });
 
+    // update terms list
+    updateTermsList();
+
     // create new set if setid is empty
     if (widget.set.setid.isEmpty) {
+      // TODO: what if set is new??
       await DatabaseTings().createAndUploadSet(
         title: _titleController.text,
         description: _descriptionController.text,
         userid: AuthTings.currentUser.userid,
         username: AuthTings.currentUser.username,
+        terms: terms,
       );
     }
     // update fields otherwise
@@ -62,6 +78,7 @@ class _SetPageState extends State<SetPage> {
         setid: widget.set.setid,
         title: _titleController.text,
         description: _descriptionController.text,
+        terms: terms,
       );
       showSnackBar(context, res);
     }
@@ -74,17 +91,13 @@ class _SetPageState extends State<SetPage> {
     goBack();
   }
 
-  void addTerm() async {
-    String res = await DatabaseTings().addTermToSet(
-      front: _newTermFrontController.text,
-      back: _newTermBackController.text,
-      s: widget.set,
-    );
+  void addTerm() {
+    // TODO: make auto-save
+    String front = "Untitled" + terms.length.toString();
+    terms.add(front);
     setState(() {
-      widget.set.terms[_newTermFrontController.text] =
-          _newTermBackController.text;
+      _termFrontEditingControllers.add(TextEditingController(text: front));
     });
-    showSnackBar(context, res);
   }
 
   @override
@@ -107,9 +120,63 @@ class _SetPageState extends State<SetPage> {
               text: "Save Set",
               isEnabled: _buttonEnabled,
             ),
+            const SizedBox(height: 50),
+            Expanded(
+              child: (terms.isEmpty)
+                  ? const Text(
+                      "No terms added",
+                      textAlign: TextAlign.center,
+                    )
+                  : ListView.builder(
+                      itemCount: _termFrontEditingControllers.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return TermView(
+                          termFrontController:
+                              _termFrontEditingControllers[index],
+                        );
+                      },
+                    ),
+            ),
+            MyButton(
+              text: "+",
+              onPress: addTerm,
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class TermView extends StatefulWidget {
+  final TextEditingController termFrontController;
+
+  const TermView({Key? key, required this.termFrontController})
+      : super(key: key);
+
+  @override
+  State<TermView> createState() => _TermViewState();
+}
+
+class _TermViewState extends State<TermView> {
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: MyTextField(
+            textController: widget.termFrontController,
+            labelText: 'front',
+          ),
+        ),
+        const SizedBox(width: 15),
+        Expanded(
+          child: MyTextField(
+            textController: widget.termFrontController,
+            labelText: 'back',
+          ),
+        ), // DISPLAY TRANSLATED TEXT IN REAL TIME
+      ],
     );
   }
 }

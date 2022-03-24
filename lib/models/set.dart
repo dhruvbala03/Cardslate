@@ -7,7 +7,7 @@ class Set {
   final String ownerName;
   final String description;
   final DateTime datePublished;
-  final Map terms;
+  final List terms;
 
   const Set({
     required this.setid,
@@ -41,11 +41,11 @@ class Set {
       ownerName: "",
       description: "",
       datePublished: DateTime.now(),
-      terms: {},
+      terms: [],
     );
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toMap() {
     return {
       "set-id": setid,
       "title": title,

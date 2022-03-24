@@ -33,6 +33,7 @@ class DatabaseTings {
     required String description,
     required String userid,
     required String username,
+    required List<String> terms,
   }) async {
     // asking for userid here because we don't want to make extra calls to firebase auth when we can just get it from our state management
     String res = "Some error occurred";
@@ -46,14 +47,14 @@ class DatabaseTings {
         ownerName: username,
         description: description,
         datePublished: DateTime.now(),
-        terms: {},
+        terms: terms,
       );
 
       // add set to local user
       AuthTings.currentUser.sets.add(setid);
 
       // add set to database
-      _firestore.collection('sets').doc(setid).set(s.toJson());
+      _firestore.collection('sets').doc(setid).set(s.toMap());
 
       // add set id to user document in database
       _firestore.collection('users').doc(userid).update({
@@ -70,12 +71,14 @@ class DatabaseTings {
     required String setid,
     required String title,
     required String description,
+    required List<String> terms,
   }) async {
     String res = "Some error occurred";
     try {
       await _firestore.collection('sets').doc(setid).update({
         'title': title,
         'description': description,
+        'terms': terms,
       });
       res = "success";
     } catch (err) {
@@ -92,8 +95,8 @@ class DatabaseTings {
       // remove set from database
       await _firestore.collection('sets').doc(set.setid).delete();
       await _firestore.collection('users').doc(set.ownerid).update({
-        'sets': AuthTings.currentUser.sets,
-      });
+        'sets': FieldValue.arrayRemove([set.setid]),
+      }); // TODO: is there a more efficient way of doing this?
       res = 'success';
     } catch (err) {
       res = err.toString();
@@ -109,12 +112,9 @@ class DatabaseTings {
   }) async {
     String res = "Some error occurred";
     try {
-      await _firestore
-          .collection('sets')
-          .doc(s.setid)
-          .collection('terms')
-          .doc(front)
-          .set({front: back});
+      await _firestore.collection('sets').doc(s.setid).update({
+        'terms': FieldValue.arrayUnion([front]),
+      });
     } catch (err) {
       return err.toString();
     }

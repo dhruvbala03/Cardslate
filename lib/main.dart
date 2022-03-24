@@ -21,13 +21,11 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    var user = FirebaseAuth.instance.currentUser;
 
     // TODO: setup structured navigation system that allows back and forth
-    return MaterialApp(
+    return const MaterialApp(
       title: 'Translatr Backend',
-      home:
-          (user == null) ? LoginPage() : HomePage(user: AuthTings.currentUser),
+      home: LoginPage(),
     );
   }
 }
