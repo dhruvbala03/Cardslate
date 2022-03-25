@@ -5,6 +5,8 @@ class MyTextField extends StatefulWidget {
   final String labelText;
   final bool isPassword;
   final double maxWidth;
+  final bool isEnabled;
+  final onEdit;
 
   const MyTextField({
     Key? key,
@@ -12,6 +14,8 @@ class MyTextField extends StatefulWidget {
     required this.labelText,
     this.isPassword = false,
     this.maxWidth = double.infinity,
+    this.isEnabled = true,
+    this.onEdit,
   }) : super(key: key);
 
   @override
@@ -26,6 +30,8 @@ class _MyTextFieldState extends State<MyTextField> {
       child: SizedBox(
         width: widget.maxWidth,
         child: TextField(
+          onEditingComplete: widget.onEdit ?? () {}, // do nothing if null
+          enabled: widget.isEnabled,
           keyboardType: TextInputType.text,
           controller: widget.textController,
           obscureText: widget.isPassword,

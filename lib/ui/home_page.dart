@@ -1,3 +1,4 @@
+import 'package:firebase/firebase.dart';
 import 'package:flutter/material.dart';
 import 'package:translatr_backend/models/appuser.dart';
 import 'package:translatr_backend/models/set.dart';
@@ -40,7 +41,20 @@ class _HomePageState extends State<HomePage> {
     init();
   }
 
-  void navigateToSetView(Set s) async {
+  Future<void> newSet() async {
+    Set s = await DatabaseTings().createAndUploadSet(
+      title: "",
+      description: "",
+      userid: AuthTings.currentUser.userid,
+      username: AuthTings.currentUser.username,
+    );
+    setState(() {
+      _usersets.add(s);
+    });
+    await navigateToSetView(s);
+  } // TODO: make this work
+
+  Future<void> navigateToSetView(Set s) async {
     await Navigator.of(context)
         .push(MaterialPageRoute(builder: (context) => SetPage(set: s)));
     init();
@@ -63,7 +77,7 @@ class _HomePageState extends State<HomePage> {
             Text("Welcome, " + widget.user.firstName + "!"),
             MyButton(
               text: "Create Set",
-              onPress: () => navigateToSetView(Set.none()),
+              onPress: newSet,
               isEnabled: _buttonEnabled,
             ),
             Expanded(

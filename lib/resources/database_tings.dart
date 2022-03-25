@@ -1,53 +1,66 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:translatr_backend/resources/auth_tings.dart';
 import 'package:uuid/uuid.dart';
-import 'package:translatr_backend/models/set.dart' as model;
+import 'package:translatr_backend/models/set.dart' as modelset;
+import 'package:translatr_backend/models/term.dart' as modelterm;
 
 // TODO: what is static and what is not
 class DatabaseTings {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<model.Set> downloadSet({required String setid}) async {
-    DocumentSnapshot documentSnapshot =
+  Future<modelset.Set> downloadSet({required String setid}) async {
+    DocumentSnapshot setSnapshot =
         await _firestore.collection('sets').doc(setid).get();
-    return model.Set.fromSnap(documentSnapshot);
+    return modelset.Set.fromSnap(setSnapshot);
   }
 
-  Future<List<model.Set>> downloadUserSets({required String userid}) async {
+  Future<List<modelset.Set>> downloadUserSets({required String userid}) async {
     List setids = AuthTings.currentUser.sets;
-    List<model.Set> sets = [];
+    List<modelset.Set> sets = [];
     for (String setid in setids) {
-      model.Set s = await downloadSet(setid: setid);
+      modelset.Set s = await downloadSet(setid: setid);
       sets.add(s);
     }
     return sets;
   }
 
-  // TODO: exc
-  Map<String, String> extractTermsFromSet({required model.Set s}) {
-    return (s.terms as Map<String, String>);
+  Future<List<modelterm.Term>> extractTermsFromSet({
+    required modelset.Set set,
+  }) async {
+    if (set.setid.isEmpty) return [];
+    List<modelterm.Term> terms = [];
+    for (String termid in set.terms) {
+      DocumentSnapshot termSnapshot = await _firestore
+          .collection('sets')
+          .doc(set.setid)
+          .collection('terms')
+          .doc(termid)
+          .get();
+      terms.add(modelterm.Term.fromSnap(termSnapshot));
+    }
+    return terms;
   }
 
-  Future<model.Set> createAndUploadSet({
+  Future<modelset.Set> createAndUploadSet({
     required String title,
     required String description,
     required String userid,
     required String username,
-    required List<String> terms,
+    // required List<String> terms,
   }) async {
     // asking for userid here because we don't want to make extra calls to firebase auth when we can just get it from our state management
     String res = "Some error occurred";
     try {
       // creates unique set id (based on time)
       String setid = const Uuid().v1();
-      model.Set s = model.Set(
+      modelset.Set s = modelset.Set(
         setid: setid,
         title: title,
         ownerid: userid,
         ownerName: username,
         description: description,
         datePublished: DateTime.now(),
-        terms: terms,
+        terms: [],
       );
 
       // add set to local user
@@ -63,7 +76,8 @@ class DatabaseTings {
 
       return s;
     } catch (err) {
-      return model.Set.none(); // TODO: improve
+      print("error creating new set");
+      return modelset.Set.none(); // TODO: improve
     }
   }
 
@@ -71,14 +85,12 @@ class DatabaseTings {
     required String setid,
     required String title,
     required String description,
-    required List<String> terms,
   }) async {
     String res = "Some error occurred";
     try {
       await _firestore.collection('sets').doc(setid).update({
         'title': title,
-        'description': description,
-        'terms': terms,
+        'description': description
       });
       res = "success";
     } catch (err) {
@@ -87,7 +99,7 @@ class DatabaseTings {
     return res;
   }
 
-  Future<String> deleteSet({required model.Set set}) async {
+  Future<String> deleteSet({required modelset.Set set}) async {
     String res = "Some error occurred";
     try {
       // remove set from local user
@@ -105,25 +117,41 @@ class DatabaseTings {
   }
 
   // TODO: make this work
-  Future<String> addTermToSet({
+  Future<modelterm.Term> newTermToSet({
     required String front,
     required String back,
-    required model.Set s,
+    required modelset.Set set,
   }) async {
     String res = "Some error occurred";
     try {
-      await _firestore.collection('sets').doc(s.setid).update({
-        'terms': FieldValue.arrayUnion([front]),
+      // creates unique term id (based on time)
+      String termId = const Uuid().v1();
+      modelterm.Term term = modelterm.Term(
+        termId: termId,
+        setId: set.setid,
+        front: front,
+        back: back,
+      );
+      // add termid to registry in set
+      await _firestore.collection('sets').doc(set.setid).update({
+        'terms': FieldValue.arrayUnion([termId]),
       });
+      // add term to its own document
+      await _firestore
+          .collection('sets')
+          .doc(set.setid)
+          .collection('terms')
+          .doc(termId)
+          .set(term.toMap());
+      return term;
     } catch (err) {
-      return err.toString();
+      return modelterm.Term.none();
     }
-    return res;
   }
 
   Future<String> removeTermFromSet({
-    required String front,
-    required model.Set s,
+    required String termId,
+    required modelset.Set s,
   }) async {
     String res = "Some error occurred";
     try {
@@ -131,8 +159,31 @@ class DatabaseTings {
           .collection('sets')
           .doc(s.setid)
           .collection('terms')
-          .doc(front)
+          .doc(termId)
           .delete();
+    } catch (err) {
+      return err.toString();
+    }
+    return res;
+  }
+
+  // TODO: implement
+  Future<String> editTerm({
+    required modelterm.Term term,
+    required String front,
+    required String back,
+  }) async {
+    String res = "Some error occurred";
+    try {
+      await _firestore
+          .collection('sets')
+          .doc(term.setId)
+          .collection('terms')
+          .doc(term.termId)
+          .update({
+        'front': front,
+        'back': back,
+      });
     } catch (err) {
       return err.toString();
     }
