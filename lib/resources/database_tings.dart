@@ -88,10 +88,10 @@ class DatabaseTings {
   }) async {
     String res = "Some error occurred";
     try {
-      await _firestore.collection('sets').doc(setid).update({
-        'title': title,
-        'description': description
-      });
+      await _firestore
+          .collection('sets')
+          .doc(setid)
+          .update({'title': title, 'description': description});
       res = "success";
     } catch (err) {
       return err.toString();
@@ -127,8 +127,8 @@ class DatabaseTings {
       // creates unique term id (based on time)
       String termId = const Uuid().v1();
       modelterm.Term term = modelterm.Term(
-        termId: termId,
-        setId: set.setid,
+        termid: termId,
+        setid: set.setid,
         front: front,
         back: back,
       );
@@ -149,17 +149,19 @@ class DatabaseTings {
     }
   }
 
-  Future<String> removeTermFromSet({
-    required String termId,
-    required modelset.Set s,
+  Future<String> deleteTerm({
+    required modelterm.Term term,
   }) async {
     String res = "Some error occurred";
     try {
+      await _firestore.collection('sets').doc(term.setid).update({
+        'terms': FieldValue.arrayRemove([term.termid]),
+      });
       await _firestore
           .collection('sets')
-          .doc(s.setid)
+          .doc(term.setid)
           .collection('terms')
-          .doc(termId)
+          .doc(term.termid)
           .delete();
     } catch (err) {
       return err.toString();
@@ -177,9 +179,9 @@ class DatabaseTings {
     try {
       await _firestore
           .collection('sets')
-          .doc(term.setId)
+          .doc(term.setid)
           .collection('terms')
-          .doc(term.termId)
+          .doc(term.termid)
           .update({
         'front': front,
         'back': back,

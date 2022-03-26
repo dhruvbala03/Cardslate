@@ -98,12 +98,33 @@ class _SetPageState extends State<SetPage> {
       back: "",
       set: widget.set,
     );
-    if (term.termId.isNotEmpty) {
+    if (term.termid.isNotEmpty) {
       setState(() {
         terms.add(term);
       });
     }
     // TODO: what happens if termId is empty?
+  }
+
+  void deleteTerm({required Term term}) async {
+    String res = await DatabaseTings().deleteTerm(
+      term: term,
+    ); // display snackbar something with res?
+    setState(() {
+      terms.remove(term);
+    });
+  }
+
+  void updateTerm({
+    required Term term,
+    required String front,
+    required String back,
+  }) async {
+    String res = await DatabaseTings().editTerm(
+      term: term,
+      front: front,
+      back: back,
+    ); // display snackbar something with res?
   }
 
   @override
@@ -138,6 +159,16 @@ class _SetPageState extends State<SetPage> {
                       itemBuilder: (BuildContext context, int index) {
                         return TermView(
                           term: terms[index],
+                          deleteFunction: () => deleteTerm(term: terms[index]),
+                          editFunction: ({
+                            required String front,
+                            required String back,
+                          }) =>
+                              updateTerm(
+                            term: terms[index],
+                            front: front,
+                            back: back,
+                          ),
                         );
                       },
                     ),
@@ -155,8 +186,15 @@ class _SetPageState extends State<SetPage> {
 
 class TermView extends StatefulWidget {
   final Term term;
+  final deleteFunction;
+  final editFunction;
 
-  const TermView({Key? key, required this.term}) : super(key: key);
+  const TermView(
+      {Key? key,
+      required this.term,
+      required this.deleteFunction,
+      required this.editFunction})
+      : super(key: key);
 
   @override
   State<TermView> createState() => _TermViewState();
@@ -173,28 +211,32 @@ class _TermViewState extends State<TermView> {
     _backController.text = widget.term.back;
   }
 
-  void updateTerm() async {
+  void translateAndUpdateTerm() async {
     String language = "english";
     _backController.text = await Translator.translate(
       text: _frontController.text,
       language: language,
     );
-    String res = await DatabaseTings().editTerm(
-      term: widget.term,
+    widget.editFunction(
       front: _frontController.text,
       back: _backController.text,
-    ); // display snackbar something with res?
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
+        GestureDetector(
+          onTap: widget.deleteFunction,
+          child: Text('X'),
+        ),
+        const SizedBox(width: 15),
         Expanded(
           child: MyTextField(
             textController: _frontController,
             labelText: 'front',
-            onEdit: updateTerm,
+            onEdit: translateAndUpdateTerm,
           ),
         ),
         const SizedBox(width: 15),
@@ -207,9 +249,9 @@ class _TermViewState extends State<TermView> {
         ),
         const SizedBox(width: 15),
         GestureDetector(
-            onTap: updateTerm,
-            child: Text(
-                'save')) // TODO: make this automatic so that the user does not have to click a button to save
+          onTap: translateAndUpdateTerm,
+          child: Text('save'),
+        ), // TODO: make this automatic so that the user does not have to click a button to save
       ],
     );
   }

@@ -33,7 +33,7 @@ class _HomePageState extends State<HomePage> {
   void logOut() async {
     await AuthTings().signOut();
     Navigator.pop(context);
-  }
+  } // TODO: bugs logging out sometimes
 
   @override
   void initState() {
