@@ -28,8 +28,8 @@ class Set {
       ownerid: snapshot["owner-id"],
       ownerName: snapshot["owner-name"],
       description: snapshot["description"],
-      datePublished: snapshot["date-published"],
-      terms: snapshot["this.terms"],
+      datePublished: (snapshot["date-published"] as Timestamp).toDate(),
+      terms: snapshot["terms"],
     );
   }
 
@@ -45,7 +45,7 @@ class Set {
     );
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toMap() {
     return {
       "set-id": setid,
       "title": title,

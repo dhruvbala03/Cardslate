@@ -2,13 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AppUser {
   final String userid;
-  final String firstName;
-  final String lastName;
-  final String username;
+  String firstName;
+  String lastName;
+  String username;
   final String email;
-  final List sets;
+  List sets;
 
-  const AppUser({
+  AppUser({
     required this.userid,
     required this.firstName,
     required this.lastName,
@@ -18,7 +18,7 @@ class AppUser {
   });
 
   static AppUser fromSnap(DocumentSnapshot snap) {
-    var snapshot = snap.data() as Map<String, dynamic>;
+    var snapshot = snap.data() as Map;
 
     return AppUser(
       userid: snapshot["user-id"],
@@ -31,7 +31,7 @@ class AppUser {
   }
 
   static AppUser none() {
-    return const AppUser(
+    return AppUser(
       userid: "",
       firstName: "",
       lastName: "",
@@ -41,7 +41,7 @@ class AppUser {
     );
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toMap() {
     return {
       "user-id": userid,
       "first-name": firstName,

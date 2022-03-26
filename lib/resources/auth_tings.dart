@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:translatr_backend/models/appuser.dart' as model;
 
+// TODO: what is static and what is not
 class AuthTings {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -9,10 +10,10 @@ class AuthTings {
 
   // TODO: handle possible errors
   Future<model.AppUser> getUserDetails() async {
-    User currentUser = _auth.currentUser!;
+    User user = _auth.currentUser!;
 
     DocumentSnapshot documentSnapshot =
-        await _firestore.collection('users').doc(currentUser.uid).get();
+        await _firestore.collection('users').doc(user.uid).get();
 
     return model.AppUser.fromSnap(documentSnapshot);
   }
@@ -49,14 +50,14 @@ class AuthTings {
         lastName: lastName,
         username: username,
         email: email,
-        sets: [] as List<String>,
+        sets: [],
       );
 
       // add user to our database
       await _firestore
           .collection("users")
           .doc(cred.user!.uid)
-          .set(_user.toJson());
+          .set(_user.toMap());
 
       res = "success";
     } catch (err) {
@@ -74,7 +75,7 @@ class AuthTings {
       return "Please enter all fields.";
     }
 
-    String res = "Some error occurred";
+    String res = "Some error occurred at authenticateUser method";
     try {
       await _auth.signInWithEmailAndPassword(
         email: email,
@@ -90,5 +91,10 @@ class AuthTings {
 
   Future<void> signOut() async {
     await _auth.signOut();
+    currentUser = model.AppUser.none();
+  }
+
+  Future<void> loadUserInfo() async {
+    currentUser = await getUserDetails();
   }
 }

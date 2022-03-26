@@ -6,6 +6,7 @@ import 'package:translatr_backend/resources/database_tings.dart';
 import 'package:translatr_backend/ui/reusable/mybutton.dart';
 import 'package:translatr_backend/ui/set_page.dart';
 
+import '../resources/auth_tings.dart';
 import '../utils/utils.dart';
 
 class HomePage extends StatefulWidget {
@@ -18,22 +19,52 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  bool _buttonEnabled = true;
+  List<Set> _usersets = [];
 
+  void init() async {
+    var sets =
+        await DatabaseTings().downloadUserSets(userid: widget.user.userid);
+    setState(() {
+      _usersets = sets;
+    });
+  }
 
-  void createSet() async {
+  void logOut() async {
+    await AuthTings().signOut();
+    Navigator.pop(context);
+  } // TODO: bugs logging out sometimes
+
+  @override
+  void initState() {
+    super.initState();
+    init();
+  }
+
+  Future<void> newSet() async {
     Set s = await DatabaseTings().createAndUploadSet(
       title: "",
       description: "",
-      userid: widget.user.userid,
-      username: widget.user.username,
+      userid: AuthTings.currentUser.userid,
+      username: AuthTings.currentUser.username,
     );
-    if (s.setid != "") {
-      Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => SetPage(set: s)));
-      showSnackBar(context, "success");
-    } else {
-      showSnackBar(context, "Some error occured. Please try again.");
-    }
+    setState(() {
+      _usersets.add(s);
+    });
+    await navigateToSetView(s);
+  } // TODO: make this work
+
+  Future<void> navigateToSetView(Set s) async {
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => SetPage(set: s)));
+    init();
+  }
+
+  void deleteSet(int index) async {
+    String res = "Some error occured";
+    res = await DatabaseTings().deleteSet(set: _usersets[index]);
+    init();
+    showSnackBar(context, res); // TODO: snack bar not showing
   }
 
   @override
@@ -42,11 +73,63 @@ class _HomePageState extends State<HomePage> {
       child: Center(
         child: Column(
           children: [
+            MyButton(text: "Log Out", onPress: logOut),
             Text("Welcome, " + widget.user.firstName + "!"),
-            MyButton(text: "Create Set", onPress: createSet),
+            MyButton(
+              text: "Create Set",
+              onPress: newSet,
+              isEnabled: _buttonEnabled,
+            ),
+            Expanded(
+              child: (_usersets.isEmpty)
+                  ? const Text(
+                      "No sets added",
+                      textAlign: TextAlign.center,
+                    )
+                  : ListView.builder(
+                      itemCount: _usersets.length,
+                      itemBuilder: (context, index) {
+                        return SetListItem(
+                          deleteFunction: () => deleteSet(index),
+                          navigateFunction: () =>
+                              navigateToSetView(_usersets[index]),
+                          setTitle: _usersets[index].title,
+                        );
+                      },
+                    ),
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class SetListItem extends StatelessWidget {
+  final deleteFunction;
+  final navigateFunction;
+  final String setTitle;
+
+  const SetListItem({
+    Key? key,
+    required this.deleteFunction,
+    required this.navigateFunction,
+    required this.setTitle,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        MyButton(
+          text: "X",
+          onPress: deleteFunction,
+        ),
+        GestureDetector(
+          onTap: navigateFunction,
+          child: Text(setTitle),
+        ),
+      ],
     );
   }
 }

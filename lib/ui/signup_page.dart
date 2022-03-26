@@ -7,7 +7,12 @@ import 'home_page.dart';
 import 'reusable/mybutton.dart';
 
 class SignUpPage extends StatefulWidget {
-  const SignUpPage({Key? key}) : super(key: key);
+  final String defaultEmail;
+  final String defaultPassword;
+
+  const SignUpPage(
+      {Key? key, required this.defaultEmail, required this.defaultPassword})
+      : super(key: key);
 
   @override
   State<SignUpPage> createState() => _SignUpPageState();
@@ -20,7 +25,21 @@ class _SignUpPageState extends State<SignUpPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  bool _buttonEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.text = widget.defaultEmail;
+    _passwordController.text = widget.defaultPassword;
+  }
+
   void signup() async {
+    // disable button
+    setState(() {
+      _buttonEnabled = false;
+    });
+
     // register user
     String res = await AuthTings().registerUser(
       firstName: _firstNameController.text,
@@ -38,9 +57,14 @@ class _SignUpPageState extends State<SignUpPage> {
       // navigate to homepage if successful login
       if (res == "success") {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => HomePage(user: AuthTings.currentUser)),
-          (route) => false);
+            MaterialPageRoute(
+                builder: (context) => HomePage(user: AuthTings.currentUser)),
+            (route) => false);
       }
+      // enable button
+      setState(() {
+        _buttonEnabled = true;
+      });
     }
 
     showSnackBar(context, res);
@@ -53,6 +77,7 @@ class _SignUpPageState extends State<SignUpPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            MyButton(text: "Back", onPress: () => Navigator.pop(context)),
             MyTextField(
               labelText: "first name",
               textController: _firstNameController,
@@ -78,6 +103,7 @@ class _SignUpPageState extends State<SignUpPage> {
             MyButton(
               text: "Sign Up",
               onPress: signup,
+              isEnabled: _buttonEnabled,
             ),
           ],
         ),
