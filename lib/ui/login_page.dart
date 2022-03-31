@@ -78,6 +78,14 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            const Text(
+              "Cardslate",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 25,
+              ),
+            ),
+            const SizedBox(height: 25),
             MyTextField(
               labelText: "email",
               textController: _emailController,
@@ -87,12 +95,13 @@ class _LoginPageState extends State<LoginPage> {
               textController: _passwordController,
               isPassword: true,
             ),
+            const SizedBox(height: 25),
             MyButton(
               text: "Log In",
               onPress: login,
               isEnabled: _buttonEnabled,
             ),
-            Container(height: 50),
+            const SizedBox(height: 25),
             MyButton(
               text: "Don't have an account? Sign Up",
               onPress: navigateToSignUp,

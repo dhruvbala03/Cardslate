@@ -43,7 +43,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> newSet() async {
     Set s = await DatabaseTings().createAndUploadSet(
-      title: "",
+      title: "Untitled",
       description: "",
       userid: AuthTings.currentUser.userid,
       username: AuthTings.currentUser.username,
@@ -67,19 +67,65 @@ class _HomePageState extends State<HomePage> {
     showSnackBar(context, res); // TODO: snack bar not showing
   }
 
+  showDeleteSetAlertDialog(BuildContext context, int index, String setTitle) {
+    // set up the buttons
+    Widget cancelButton = TextButton(
+      child: Text("Cancel"),
+      onPressed: () {
+        Navigator.of(context).pop();
+      },
+    );
+    Widget continueButton = TextButton(
+      child: Text("Delete"),
+      onPressed: () {
+        deleteSet(index);
+        Navigator.of(context).pop();
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("AlertDialog"),
+      content: Text(
+          "Are you sure you want to delete '$setTitle'? \nThis action is irreversible."),
+      actions: [
+        cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
       child: Center(
         child: Column(
           children: [
+            const SizedBox(height: 50),
+            Text(
+              "Welcome, " + widget.user.firstName + "!",
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 25,
+              ),
+            ),
+            const SizedBox(height: 50),
             MyButton(text: "Log Out", onPress: logOut),
-            Text("Welcome, " + widget.user.firstName + "!"),
+            const SizedBox(height: 25),
             MyButton(
               text: "Create Set",
               onPress: newSet,
               isEnabled: _buttonEnabled,
             ),
+            const SizedBox(height: 50),
             Expanded(
               child: (_usersets.isEmpty)
                   ? const Text(
@@ -90,7 +136,11 @@ class _HomePageState extends State<HomePage> {
                       itemCount: _usersets.length,
                       itemBuilder: (context, index) {
                         return SetListItem(
-                          deleteFunction: () => deleteSet(index),
+                          deleteFunction: () => showDeleteSetAlertDialog(
+                            context,
+                            index,
+                            _usersets[index].title,
+                          ),
                           navigateFunction: () =>
                               navigateToSetView(_usersets[index]),
                           setTitle: _usersets[index].title,
@@ -125,6 +175,7 @@ class SetListItem extends StatelessWidget {
           text: "X",
           onPress: deleteFunction,
         ),
+        const SizedBox(width: 15),
         GestureDetector(
           onTap: navigateFunction,
           child: Text(setTitle),
