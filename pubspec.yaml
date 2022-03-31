@@ -35,6 +35,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutterfire: ^0.0.1
+  translator: ^0.1.7
   uuid: ^3.0.6
 
 dev_dependencies:

@@ -212,10 +212,12 @@ class _TermViewState extends State<TermView> {
   }
 
   void translateAndUpdateTerm() async {
-    String language = "english";
+    String from_language = "en";
+    String to_language = "fr";
     _backController.text = await Translator.translate(
       text: _frontController.text,
-      language: language,
+      from_language: from_language,
+      to_language: to_language,
     );
     widget.editFunction(
       front: _frontController.text,
