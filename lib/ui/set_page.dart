@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
+import 'package:translator/translator.dart';
 import 'package:translatr_backend/models/set.dart';
 import 'package:translatr_backend/resources/auth_tings.dart';
 import 'package:translatr_backend/resources/database_tings.dart';
@@ -27,6 +28,9 @@ class _SetPageState extends State<SetPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   bool _buttonEnabled = true;
+
+  String _selectedFromLanguage = "";
+  String _selectedToLanguage = "English (US)";
 
   List<Term> terms = [];
 
@@ -115,7 +119,7 @@ class _SetPageState extends State<SetPage> {
     });
   }
 
-  void updateTerm({
+  void translateAndUpdateTerm({
     required Term term,
     required String front,
     required String back,
@@ -134,20 +138,74 @@ class _SetPageState extends State<SetPage> {
         child: Column(
           children: [
             MyButton(text: "Back", onPress: goBack),
+            const SizedBox(height: 25),
             MyTextField(
               textController: _titleController,
               labelText: "Set Title",
             ),
+            const SizedBox(height: 10),
             MyTextField(
               textController: _descriptionController,
               labelText: "Set Description",
             ),
+            const SizedBox(height: 10),
             MyButton(
               onPress: saveSet,
               text: "Save Set",
               isEnabled: _buttonEnabled,
             ),
-            const SizedBox(height: 50),
+            const SizedBox(height: 25),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("Translate From:"),
+                DropdownButton<String>(
+                  items: Translator.languages_to_language_codes.keys
+                      .toList()
+                      .map((language) => DropdownMenuItem<String>(
+                            child: Text(language),
+                            value: language,
+                          ))
+                      .toList(),
+                  value: _selectedFromLanguage,
+                  onChanged: (dynamic newValue) {
+                    String language = newValue.toString();
+                    Translator.to_language = language;
+                    setState(() {
+                      _selectedFromLanguage = language;
+                    });
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("Translate To:"),
+                DropdownButton<String>(
+                  items: Translator.languages_to_language_codes.keys
+                      .toList()
+                      .map((language) => DropdownMenuItem<String>(
+                            child: Text(language),
+                            value: language,
+                          ))
+                      .toList(),
+                  value: _selectedToLanguage,
+                  onChanged: (dynamic newValue) {
+                    String language = newValue.toString();
+                    if (language == "") {
+                      language = "English (US)";
+                    }
+                    Translator.to_language = language;
+                    setState(() {
+                      _selectedToLanguage = language;
+                    });
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 25),
             Expanded(
               child: (terms.isEmpty)
                   ? const Text(
@@ -164,7 +222,7 @@ class _SetPageState extends State<SetPage> {
                             required String front,
                             required String back,
                           }) =>
-                              updateTerm(
+                              translateAndUpdateTerm(
                             term: terms[index],
                             front: front,
                             back: back,
@@ -212,10 +270,8 @@ class _TermViewState extends State<TermView> {
   }
 
   void translateAndUpdateTerm() async {
-    String language = "english";
     _backController.text = await Translator.translate(
       text: _frontController.text,
-      language: language,
     );
     widget.editFunction(
       front: _frontController.text,
@@ -250,8 +306,8 @@ class _TermViewState extends State<TermView> {
         const SizedBox(width: 15),
         GestureDetector(
           onTap: translateAndUpdateTerm,
-          child: Text('save'),
-        ), // TODO: make this automatic so that the user does not have to click a button to save
+          child: Text('translate'),
+        ), // TODO: make this automatic so that the user does not have to click a button to translate/save
       ],
     );
   }

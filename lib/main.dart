@@ -21,11 +21,12 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-
-    // TODO: setup structured navigation system that allows back and forth
-    return const MaterialApp(
-      title: 'Translatr Backend',
-      home: LoginPage(),
+    return Container(
+      padding: const EdgeInsets.all(25),
+      child: const MaterialApp(
+        title: 'Cardslate',
+        home: LoginPage(),
+      ),
     );
   }
 }
